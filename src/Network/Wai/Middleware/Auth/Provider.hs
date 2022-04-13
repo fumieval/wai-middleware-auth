@@ -183,7 +183,7 @@ mkProviderParser _ =
     nameProxyError = error "AuthProvider.getProviderName should not evaluate it's argument."
 
 -- | Parse configuration for providers from an `Object`.
-parseProviders :: Object -> [ProviderParser] -> Result Providers
+parseProviders :: HM.HashMap T.Text Value -> [ProviderParser] -> Result Providers
 parseProviders unparsedProvidersHM providerParsers =
   if HM.null unrecognized
     then sequence $ HM.intersectionWith parseProvider unparsedProvidersHM parsersHM

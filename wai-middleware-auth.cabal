@@ -1,4 +1,4 @@
-cabal-version:       1.18
+cabal-version:       2.2
 name:                wai-middleware-auth
 version:             0.2.6.0
 synopsis:            Authentication middleware that secures WAI application
@@ -38,7 +38,7 @@ library
                      , clientsession
                      , cookie               >= 0.4.2
                      , exceptions
-                     , hoauth2              >= 1.11
+                     , hoauth2              ^>= 2.4
                      , http-client
                      , http-client-tls
                      , http-conduit
@@ -52,6 +52,7 @@ library
                      , shakespeare
                      , text
                      , time
+                     , transformers
                      , unix-compat
                      , unordered-containers
                      , uri-bytestring

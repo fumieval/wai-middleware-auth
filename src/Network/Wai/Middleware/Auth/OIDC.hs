@@ -33,7 +33,6 @@ import           Data.Aeson                           (FromJSON(parseJSON),
 import qualified Data.ByteString.Char8                as S8
 import           Data.Function                        ((&))
 import qualified Data.Time.Clock                      as Clock
-import           Data.Traversable                     (for)
 import qualified Data.Text                            as T
 import qualified Data.Text.Lazy                       as TL
 import qualified Data.Text.Lazy.Encoding              as TLE
@@ -127,7 +126,7 @@ instance AuthProvider OpenIDConnect where
   getProviderName _ = "oidc"
   getProviderInfo = oidcProviderInfo
   handleLogin oidc@OpenIDConnect {.. } req suffix renderUrl onSuccess onFailure = do
-    oauth2 <- mkOauth2 oidc (Just renderUrl)
+    oauth2 <- mkOauth2 oidc renderUrl
     manager <- maybe getGlobalManager pure oidcManager
     oauth2Login
       oauth2
@@ -146,7 +145,7 @@ instance AuthProvider OpenIDConnect where
         vRes <- validateIdToken' oidc tokens
         case vRes of
           Nothing -> do
-            oauth2 <- mkOauth2 oidc Nothing
+            oauth2 <- mkOauth2 oidc dummyRenderUrl
             manager <- maybe getGlobalManager pure (oidcManager oidc)
             rRes <- refreshTokens tokens manager oauth2
             case rRes of
@@ -207,15 +206,18 @@ fetchJWKSet jwkSetEndpoint = do
   req <- parseRequestThrow (T.unpack jwkSetEndpoint) 
   getResponseBody <$> httpJSON req
 
-mkOauth2 :: OpenIDConnect -> Maybe (Text.Hamlet.Render ProviderUrl) -> IO OA2.OAuth2
+dummyRenderUrl :: Text.Hamlet.Render ProviderUrl
+dummyRenderUrl = mempty
+
+mkOauth2 :: OpenIDConnect -> Text.Hamlet.Render ProviderUrl -> IO OA2.OAuth2
 mkOauth2 OpenIDConnect {..} renderUrl = do
-  callbackURI <- for renderUrl $ \render -> parseAbsoluteURI $ render (ProviderUrl ["complete"]) []
+  callbackURI <- parseAbsoluteURI $ renderUrl (ProviderUrl ["complete"]) []
   pure OA2.OAuth2
-        { oauthClientId = oidcClientId
-        , oauthClientSecret = Just oidcClientSecret
-        , oauthOAuthorizeEndpoint = authorizationEndpoint oidcMetadata
-        , oauthAccessTokenEndpoint = tokenEndpoint oidcMetadata
-        , oauthCallback = callbackURI
+        { oauth2ClientId = oidcClientId
+        , oauth2ClientSecret = oidcClientSecret
+        , oauth2AuthorizeEndpoint = authorizationEndpoint oidcMetadata
+        , oauth2TokenEndpoint = tokenEndpoint oidcMetadata
+        , oauth2RedirectUri = callbackURI
         }
 
 validateIdToken :: OpenIDConnect -> OA2.IdToken -> IO (Either JWT.JWTError JWT.ClaimsSet)

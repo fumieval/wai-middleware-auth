@@ -29,6 +29,7 @@ module Network.Wai.Middleware.Auth
 import           Blaze.ByteString.Builder             (fromByteString)
 import           Data.Binary                          (Binary)
 import qualified Data.ByteString                      as S
+import qualified Data.ByteString.Lazy.Char8           as LC
 import           Data.ByteString.Builder              (Builder)
 import qualified Data.HashMap.Strict                  as HM
 import qualified Data.Text                            as T
@@ -258,7 +259,7 @@ mkAuthMiddleware AuthSettings {..} = do
                         onSuccess
                         onFailure
                 ["health"] -> respond $ responseLBS status200 [] "OK"
-                _ -> respond $ responseLBS status404 [] "Unknown URL"
+                _ -> respond $ responseLBS status404 [] $ "Unknown URL: " <> LC.pack (show (pathInfo req, HM.keys asProviders))
           -- Workaround for Chrome asking for favicon.ico, causing a wrong
           -- redirect url to be stored in a cookie.
           ["favicon.ico"] -> respond $ responseLBS status404 [] "No favicon.ico"

@@ -11,8 +11,9 @@ module Network.Wai.Auth.Config
   , decodeKey
   ) where
 
-import           Data.Aeson
+import           Data.Aeson             hiding (Key)
 import           Data.Aeson.TH          (deriveJSON)
+import qualified Data.HashMap.Strict    as HM
 import qualified Data.Text              as T
 import           Data.Text.Encoding     (encodeUtf8)
 import           Network.Wai.Auth.Tools (decodeKey, encodeKey,
@@ -70,7 +71,7 @@ data AuthConfig = AuthConfig
                             -- one hour (3600 seconds).
   , configSecretKey  :: SecretKey -- ^ Secret key. Default is "client_session_key.aes"
   , configService    :: Service
-  , configProviders  :: Object
+  , configProviders  :: HM.HashMap T.Text Value
   }
 
 $(deriveJSON defaultOptions { fieldLabelModifier = toLowerUnderscore . drop 2} ''FileServer)
